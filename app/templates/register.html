@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+  <h1>Create your account</h1>
+  <form method="post" novalidate>
+    {{ form.csrf_token }}
+    <label for="{{ form.email.id }}">{{ form.email.label.text }}</label>
+    {{ form.email(id=form.email.id, autocomplete="email") }}
+    {% for e in form.email.errors %}<p class="errors">{{ e }}</p>{% endfor %}
+
+    <label for="{{ form.password.id }}">{{ form.password.label.text }}</label>
+    {{ form.password(id=form.password.id, autocomplete="new-password") }}
+    {% for e in form.password.errors %}<p class="errors">{{ e }}</p>{% endfor %}
+
+    <label for="{{ form.confirm.id }}">{{ form.confirm.label.text }}</label>
+    {{ form.confirm(id=form.confirm.id, autocomplete="new-password") }}
+    {% for e in form.confirm.errors %}<p class="errors">{{ e }}</p>{% endfor %}
+
+    {{ form.submit(class="btn") }}
+  </form>
+{% endblock %}

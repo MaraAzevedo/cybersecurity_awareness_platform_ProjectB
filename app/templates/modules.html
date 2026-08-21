@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}My training{% endblock %}
+{% block content %}
+  <h1>My assigned training</h1>
+  {% if not modules %}
+    <p>No modules are assigned yet. Ask your administrator to seed demo content.</p>
+  {% endif %}
+  {% for m in modules %}
+    {% set prog = progress.get(m.id) %}
+    <div class="card">
+      <h2>{{ m.title }}</h2>
+      <p>Format: {{ m.content_type }}</p>
+      <p>
+        Status:
+        {% if prog and prog.status == 'completed' %}
+          <span class="badge badge-done">Completed</span>
+        {% else %}
+          <span class="badge badge-pending">Not yet completed</span>
+        {% endif %}
+      </p>
+      <a class="btn" href="{{ url_for('training.view_module', module_id=m.id) }}">
+        {% if prog and prog.status == 'completed' %}Review module{% else %}Start module{% endif %}
+      </a>
+    </div>
+  {% endfor %}
+{% endblock %}

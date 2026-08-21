@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ module.title }}{% endblock %}
+{% block content %}
+  <h1>{{ module.title }}</h1>
+  <p><a href="{{ url_for('training.my_modules') }}">&larr; Back to my training</a></p>
+
+  {% if module.content_type == 'video' and module.content_url %}
+    <p>
+      <a href="{{ module.content_url }}" target="_blank" rel="noopener noreferrer">
+        Watch the training video (opens in a new tab)
+      </a>
+      — a text summary is provided below as an accessible alternative.
+    </p>
+  {% endif %}
+
+  <div class="card">
+    {{ module.content_body | safe }}
+  </div>
+
+  <form method="post" action="{{ url_for('training.complete_module', module_id=module.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn">
+      {% if module.quiz %}Mark as read and start the quiz{% else %}Mark module as completed{% endif %}
+    </button>
+  </form>
+{% endblock %}

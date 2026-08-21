@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard{% endblock %}
+{% block content %}
+  <h1>Admin dashboard</h1>
+  <p>{{ total_employees }} test employee account(s) in this environment.</p>
+
+  <h2>Training completion &amp; quiz results (FR07)</h2>
+  <table>
+    <thead>
+      <tr><th scope="col">Module</th><th scope="col">Completion rate</th><th scope="col">Avg. quiz score</th></tr>
+    </thead>
+    <tbody>
+      {% for m in module_stats %}
+        <tr>
+          <td>{{ m.title }}</td>
+          <td>{{ m.completed }} / {{ m.total }} ({{ m.completion_rate }}%)</td>
+          <td>{{ m.avg_quiz_score ~ '%' if m.avg_quiz_score is not none else '—' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Phishing-simulation campaigns (FR04–FR06)</h2>
+  <p><em>Aggregate figures only — individual results are private, per the psychological-safety requirement.</em></p>
+  <table>
+    <thead>
+      <tr><th scope="col">Subject</th><th scope="col">Launched</th><th scope="col">Sent</th><th scope="col">Click rate</th><th scope="col">Report rate</th></tr>
+    </thead>
+    <tbody>
+      {% for c in campaign_stats %}
+        <tr>
+          <td>{{ c.subject }}</td>
+          <td>{{ c.launched_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ c.sent }}</td>
+          <td>{{ c.click_rate }}%</td>
+          <td>{{ c.report_rate }}%</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

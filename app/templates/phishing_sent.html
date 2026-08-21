@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Campaign launched{% endblock %}
+{% block content %}
+  <h1>Campaign launched: {{ campaign.subject }}</h1>
+  <p>
+    No real email was sent by this prototype (see README "How to demo"). Below are the
+    signed tracking links that would normally be emailed to each test employee — open one
+    as if you were that employee to simulate a click, and see it appear on the
+    <a href="{{ url_for('admin.dashboard') }}">admin dashboard</a>.
+  </p>
+  <table>
+    <thead><tr><th scope="col">Test employee</th><th scope="col">Simulated email link</th></tr></thead>
+    <tbody>
+      {% for email, link in links %}
+        <tr><td>{{ email }}</td><td><a href="{{ link }}">{{ link }}</a></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

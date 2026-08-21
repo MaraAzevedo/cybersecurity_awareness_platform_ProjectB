@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+  <h1>Sign in</h1>
+  <p>Use your test account to access your assigned training.</p>
+  <form method="post" novalidate>
+    {{ form.csrf_token }}
+    <label for="{{ form.email.id }}">{{ form.email.label.text }}</label>
+    {{ form.email(id=form.email.id, autocomplete="email") }}
+    {% for e in form.email.errors %}<p class="errors">{{ e }}</p>{% endfor %}
+
+    <label for="{{ form.password.id }}">{{ form.password.label.text }}</label>
+    {{ form.password(id=form.password.id, autocomplete="current-password") }}
+    {% for e in form.password.errors %}<p class="errors">{{ e }}</p>{% endfor %}
+
+    {{ form.submit(class="btn") }}
+  </form>
+  <p>No account yet? <a href="{{ url_for('auth.register') }}">Register here</a>.</p>
+  <p><em>Demo accounts (seeded test data only): admin@example.com / AdminPass123! and employee@example.com / EmployeePass123!</em></p>
+{% endblock %}

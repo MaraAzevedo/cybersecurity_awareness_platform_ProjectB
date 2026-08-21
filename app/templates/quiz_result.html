@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Quiz result{% endblock %}
+{% block content %}
+  <h1>Your result</h1>
+  <div class="card">
+    <p>Score: <strong>{{ score }}%</strong></p>
+    <p>
+      {% if passed %}
+        <span class="badge badge-done">Passed</span> — well done, this module is now complete.
+      {% else %}
+        <span class="badge badge-pending">Not yet passed</span> — review the module and try again. This is a learning tool, not a punitive record.
+      {% endif %}
+    </p>
+  </div>
+  <p><a href="{{ url_for('training.my_modules') }}">&larr; Back to my training</a></p>
+{% endblock %}

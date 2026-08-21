@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Quiz history{% endblock %}
+{% block content %}
+  <h1>Your quiz attempt history</h1>
+  <table>
+    <thead><tr><th scope="col">Date</th><th scope="col">Score</th><th scope="col">Result</th></tr></thead>
+    <tbody>
+      {% for a in attempts %}
+        <tr>
+          <td>{{ a.attempted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ a.score }}%</td>
+          <td>{{ "Passed" if a.passed else "Not passed" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

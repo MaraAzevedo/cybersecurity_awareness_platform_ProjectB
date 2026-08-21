@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}A quick note about this email{% endblock %}
+{% block content %}
+  <h1>This was a simulated phishing test</h1>
+  <div class="card">
+    <p>
+      You just clicked a link from a <strong>simulated</strong> phishing email as part of this
+      organisation's security awareness programme. Nothing was compromised, and your result
+      is private — it is not shared with your manager and is used only in aggregate, non-punitive
+      reporting (see report Section 2, psychological safety).
+    </p>
+    <h2>What to look for next time</h2>
+    <ul>
+      <li>Check the sender's actual email address, not just the display name.</li>
+      <li>Be cautious of urgency ("act now", "account will be locked").</li>
+      <li>Hover over links before clicking to preview the real destination.</li>
+      <li>When in doubt, report the email using your organisation's report button rather than clicking.</li>
+    </ul>
+    <form method="post" action="{{ url_for('phishing.report', token=token) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn">I understand — also log this as "reported"</button>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Launch phishing simulation{% endblock %}
+{% block content %}
+  <h1>Launch a simulated phishing test</h1>
+  <p>
+    This sends a <strong>simulated</strong> phishing test to test employee accounts only
+    (see report Section 2 — real employees are never targeted, even with consent, in this
+    prototype). {{ employees|length }} test employee account(s) will be included.
+  </p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="template">Choose a template</label>
+    <select id="template" name="template" required>
+      {% for key, t in templates.items() %}
+        <option value="{{ key }}">{{ t.subject }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn">Launch simulation</button>
+  </form>
+{% endblock %}
