@@ -1,0 +1,14 @@
+import { render, screen, fireEvent } from '@testing-library/react'
+import App from './App'
+
+test('preenche e envia formulário', () => {
+  render(<App />)
+
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: 'teste@email.com' }
+  })
+
+  fireEvent.click(screen.getByRole('button', { name: /entrar/i }))
+
+  expect(screen.getByText(/bem-vindo/i)).toBeInTheDocument()
+})

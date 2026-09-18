@@ -1,94 +1,137 @@
-# Employee Cybersecurity Awareness Platform — Prototype
+# Employee Cybersecurity Awareness Platform — Working Prototype
 
-> Project B - Cybersecurity Awareness Platform for the MIT course that simulates access of stakeholders, quizzes, assigned tasks and dashboard with the percentage/results of it.
+This is a real, running implementation of the design in Assessment 1 (ICT503),
+matching Section 3.7's technical specification:
 
+- **Backend:** Node.js + Express, SQLite (dev database), JWT authentication, bcrypt password hashing
+- **Frontend:** React (Vite)
+- **Schema:** matches Section 3.7.C exactly (translated to SQLite syntax for local dev)
+- **API:** implements every endpoint from Section 3.7.D
 
-A working Flask prototype for Assessment 1, implementing FR01–FR08 as described in the
-accompanying report (`Task1_Assessment1_Report.docx`), Section 6 (Technical Specifications)
-and Table 6 (API Specifications).
+This is **not** deployed anywhere — it runs on your own machine. Section 3.7.A's
+production plan (Azure App Service + Azure Database for PostgreSQL) is the
+deployment target for a real rollout; this local setup is for development,
+demonstration, and grading purposes.
 
-**Important — test data only.** This prototype must only ever be run against simulated/test
-accounts, never real employee email addresses or real phishing targets (see report Section 2,
-Assumptions and Constraints, and Section 6.E, Ethics).
+## Prerequisites
+
+- [Node.js](https://nodejs.org) v18 or later (this was built and tested on v22)
+- npm (comes with Node.js)
+
+## 1. Backend setup
+
+```bash
+cd backend
+npm install
+npm run seed     # creates data.sqlite and loads demo accounts + content
+npm run dev       # starts the API on http://localhost:4000
+```
+
+Leave this running in its own terminal.
+
+### Demo accounts (all use the same password)
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | alex.morgan@acme.test | Password123! |
+| Employee | jordan.lee@acme.test | Password123! |
+| Employee | sam.rivera@acme.test | Password123! |
+| Employee | casey.kim@acme.test | Password123! |
+
+⚠️ These are **simulated/test accounts only** (per Section 3.3's assumptions) —
+no real employee data is used anywhere in this build.
+
+To reset the database back to its original seed state at any time:
+
+```bash
+cd backend
+npm run seed
+```
+
+(This wipes and reloads all data — useful if a demo session gets messy.)
+
+## 2. Frontend setup
+
+In a **second terminal**:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open the URL it prints (typically **http://localhost:5173**).
+
+The frontend is configured (`vite.config.js`) to proxy `/api/*` requests to
+the backend at `localhost:4000`, so both servers need to be running at the
+same time.
 
 ## What's implemented
 
 | Requirement | Where |
 |---|---|
-| FR01/FR08 secure register/login | `app/auth.py`, hashed passwords via `werkzeug.security` |
-| FR02/FR03 role-based modules + progress tracking | `app/training.py` |
-| FR02/FR03 quiz engine | `app/training.py` (`take_quiz`) |
-| FR04–FR06 phishing simulation + click/report tracking | `app/phishing.py` |
-| FR07 admin dashboard | `app/admin.py` |
-| NFR01 password hashing | `app/models.py` (`User.set_password`) |
-| NFR02 privacy / access control | role checks in every blueprint route |
-| NFR06 accessibility | semantic HTML, labels, skip-link, contrast-checked CSS in `app/templates`, `app/static/style.css` |
+| FR-01 Admin creates/manages employees | `POST/GET/PUT/DELETE /api/users` |
+| FR-02 Admin assigns training | `POST /api/assignments` |
+| FR-03 Employee views/completes modules | `GET /api/assignments`, `PATCH /api/assignments/:id/complete` |
+| FR-04 Quiz engine | `GET /api/modules/:id/quiz`, `POST /api/quiz-results` (graded server-side) |
+| FR-05 Launch phishing simulation | `POST /api/phishing-campaigns` |
+| FR-06 Track phishing interaction | `GET /api/phishing-events/:id/click` (public link, no auth) |
+| FR-07 Admin dashboard | `GET /api/reports/dashboard` |
+| FR-08 Secure login | `POST /api/auth/login` (bcrypt + JWT) |
+| NFR-01 Password hashing | bcrypt, 10 salt rounds, `src/routes/auth.js` / `users.js` |
+| NFR-02 Access restricted to relevant employee/admin | Role checks in every route via `middleware/auth.js` |
 
-## Setup
+## Known limitations (honest, by design — see Section 3.3 "Out of Scope")
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python seed.py                   # creates awareness.db with 1 admin + 1 employee TEST account
-python run.py                    # runs at http://127.0.0.1:5000
-```
+- **No real email is sent.** Launching a phishing campaign creates the
+  campaign/event records but does not dispatch actual email — the "Simulate
+  click" button in the UI (and the public `/api/phishing-events/:id/click`
+  endpoint) stand in for "an employee clicked the link in their inbox."
+- **SQLite is for local development only.** Section 3.7.A specifies Azure
+  Database for PostgreSQL for the deployed version — this repo does not include
+  that deployment configuration, only the local dev setup.
+- **No password reset / email verification flow** — out of scope for the MVP.
+- **The frontend keeps the auth token in memory only** (not localStorage), so
+  refreshing the page logs you out. This was a deliberate simplification for
+  this build; a production version would need a proper persistent-session
+  strategy.
+- **Rate limiting is not implemented** (documented in Section 3.7.D as a known
+  MVP gap).
 
-Demo accounts (test data only):
-- Admin: `admin@example.com` / `AdminPass123!`
-- Employee: `employee@example.com` / `EmployeePass123!`
+## Verifying it's "real" (not just a UI mock)
 
-## How to demo the phishing-simulation flow
+A few ways to convince yourself this isn't just faking it in the browser:
 
-This prototype does **not** send real email (no budget for a paid SMTP provider — see report
-Section 2). Instead:
+1. Take a quiz as an employee, then run:
+   ```bash
+   cd backend
+   node -e "const db=require('./src/db'); console.log(db.prepare('SELECT * FROM quiz_results').all())"
+   ```
+   You'll see your actual submitted score stored in the database.
+2. Try tampering with a quiz submission (e.g. via curl, sending a fake
+   `score: 999` in the request body) — the server ignores it and grades
+   independently from `quiz_questions.correct_option`.
+3. Log in as an employee and try `GET /api/users` with that employee's token —
+   you'll get a 403, proving role-based access control is enforced server-side,
+   not just hidden in the UI.
 
-1. Sign in as the admin and open **Launch phishing test**.
-2. Choose a template and launch — you'll see a table of signed tracking links, one per test
-   employee, exactly as would normally be emailed to them.
-3. Open one of those links (simulating the employee clicking it in their inbox) — you'll land
-   on the non-punitive education page, and a `click` event is recorded.
-4. Go back to the admin dashboard to see the click rate update.
-
-## Running the tests
-
-```bash
-pip install -r requirements.txt   # includes pytest, pytest-flask
-python -m pytest tests/ -v
-```
-
-Ten tests are included, covering test cases TC-01–TC-08 from the report's Table 7 (Test Plan).
-
-## Known simplifications vs. the full design in the report
-
-- The `ROLE` entity in Figure 2 (ERD) is simplified to a `role` string column on `User` rather
-  than a separate table with a foreign key, to keep the two-day build in scope.
-- Quiz questions are stored as JSON on the `Quiz` row rather than a separate `QUESTION` table.
-- No real SMTP integration — see "How to demo" above.
-- Password hashing uses Werkzeug's default (PBKDF2-SHA256) for zero extra native dependencies
-  in a sandboxed environment; the report's technical specification (Section 6.E) recommends
-  moving to Argon2id per current OWASP guidance before any real deployment.
-- No automated WCAG scan is wired into CI; run one manually (e.g. axe or Lighthouse) per
-  Test Plan test case TC-09.
-
-## Project layout
+## Project structure
 
 ```
-prototype/
-  app/
-    __init__.py       # application factory, blueprint registration
-    models.py          # SQLAlchemy models (Figure 2 ERD)
-    auth.py             # FR01, FR08, NFR01
-    training.py          # FR02, FR03
-    phishing.py           # FR04, FR05, FR06
-    admin.py                # FR07
-    templates/                # Jinja2 templates
-    static/style.css           # accessible, high-contrast styling (NFR06)
-  tests/
-    conftest.py         # pytest fixtures (test app, test client, seeded data)
-    test_app.py           # TC-01..TC-08 automated tests
-  config.py
-  seed.py               # creates TEST accounts + demo content only
-  run.py                 # dev server entry point
-  requirements.txt
+cyberaware-app/
+├── backend/
+│   ├── src/
+│   │   ├── server.js          # Express app entry point
+│   │   ├── db.js              # SQLite schema (Section 3.7.C)
+│   │   ├── seed.js            # demo/test data loader
+│   │   ├── middleware/auth.js # JWT + role-based access control
+│   │   └── routes/            # one file per API resource (Section 3.7.D)
+│   └── package.json
+└── frontend/
+    ├── src/
+    │   ├── App.jsx             # top-level routing (login/employee/admin)
+    │   ├── api.js               # fetch wrapper for the backend API
+    │   └── components/          # Login, Sidebar, employee & admin screens
+    └── package.json
+```
 ```
